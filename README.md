@@ -13,7 +13,7 @@ For joint BaP-Pb exposure, the weight becomes a surface $\lambda_{12}(d_1,d_2)$ 
 Additivity is assessed by comparing the fitted joint radial-spline model against three additive null models, **Bliss**, **Loewe+** (EME), and **Hand**.
 Each null model induces an additive baseline surface $\lambda_{12}^{(o)}(d_1,d_2)$ based on the corresponding single-drug fits.
 
-The accompanying tutorial `Analysis.hmtl` walks through the complete analysis pipeline, from importing the pre-processed data and fitting the models to producing the figures reported in the manuscript and performing the bootstrap additivity tests.
+The accompanying tutorial [`Analysis.hmtl`](https://niccoloanceschi.github.io/BaP-Pb-additivity/Analysis.html) walks through the complete analysis pipeline, from importing the pre-processed data and fitting the models to producing the figures reported in the manuscript and performing the bootstrap additivity tests.
 
 ## Repository structure
 

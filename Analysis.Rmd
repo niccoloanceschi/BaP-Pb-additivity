@@ -1,0 +1,150 @@
+---
+title: "Testing Additivity of Lead and Benzo[a]pyrene--induced Neurotoxicity in *Caenorhabditis elegans* Assays"
+author: "Niccolò Anceschi"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  fig.align = "center", cache = FALSE
+)
+```
+
+# Overview
+
+This document reproduces the main results for the BaP–Pb drug additivity analysis 
+from the manuscript [Anceschi, Huayta, Meyer, Dunson and Herring, (2026+)
+"*Testing Additivity of Lead and Benzo[a]pyrene--induced Neurotoxicity in \textit{Caenorhabditis elegans} Assays*"](https://arxiv.org/pdf/PLACEHOLDER).
+It loads the pre-processed *C. elegans* assay data, fits the single-drug margins and
+the joint radial-spline surface, and producess figures for the dose-response surfaces
+and log-likelihood comparisons reported in the paper. 
+Each section below sources one script from the pipeline, in dependency order.
+Each sourced script contains dedicated and detailed documentation of its contents.
+
+The convex-mixture model employed represents every ordinal damage-score distribution as
+$(1-\lambda)F_0 + \lambda F_\infty$, interpolating between an unexposed and a maximal-effect profile. 
+The dose dependence enters entirely through the weight $\lambda(\cdot)$, 
+a monotone non-decreasing function that governs the whole outcome distribution.
+Under joint exposure, it becomes a surface $\lambda_{12}(d_1,d_2)$ over the dose plane.
+Additivity is tested by a likelihood ratio comparing the fitted joint model
+against different nulls -- Bliss, Loewe$^+$, and Hand -- 
+each inducing an additive baseline surface $\lambda_{12}^{(o)}$ built from the single-drug fits.
+
+# Configuration
+
+When this document is opened in RStudio, the repository path is detected automatically from the file's location, so no manual editing is needed.
+`data_file` names the pre-processed data expected alongside the scripts.
+
+```{r config}
+source_dir <- dirname(rstudioapi::getSourceEditorContext()$path) # repo local path 
+data_file <- "C-elgans_preprocessed_data.rds" # pre-processed data file
+```
+
+# Utilities
+
+Load required packages and define generic helpers (softmax, mixture
+probabilities, monotone inversion by root-finding).
+
+```{r utils, message=FALSE, warning=FALSE}
+source(file.path(source_dir, "Utils.R"))
+```
+
+# Data import and setup
+
+Import the pre-processed assay data and build everything that does *not* depend on
+the fitted parameters: the single- and joint-exposure spline bases, the dose
+constants and spline dimensions, the extremal-profile PMFs, and nested
+exposure data subsets.
+
+```{r data}
+source(file.path(source_dir, "Data_setup.R"))
+```
+
+# Likelihoods and radial splines
+
+Define the likelihood functions — both for single and joint exposures — and the
+penalized radial-spline objective — together with the caching helpers that keep
+each optimizer step cheap.
+
+```{r loglik}
+source(file.path(source_dir, "Loglikelihood.R"))
+```
+
+# Additive null models
+
+Define the three additive baselines $\lambda_{12}^{(o)}(d_1,d_2)$ — Bliss, Loewe$^+$
+(EME), and Hand — using spline parameters to be fitted on single-exposure data.
+
+```{r null-models}
+source(file.path(source_dir, "Null_models.R"))
+```
+
+# Model fit
+
+Fit the two stages: first the single-exposure behavior for both BaP and Pb,
+then the joint-exposure surface via radial-splines under a monotonicity penalty. 
+This is the computational core; the timing messages from `tic()`/`toc()` report each fit.
+
+```{r fit, cache=TRUE}
+source(file.path(source_dir, "Model_fit.R"))
+```
+
+# Result Visualization
+
+Produce the fitted weight-function plots, the joint weight-surface contours for
+each null and for the radial fit, the fitted-vs-empirical CDF scatterplots, and
+the across-subset log-likelihood comparison.
+
+```{r plots-source, message=FALSE}
+source(file.path(source_dir, "Plots.R"))
+```
+
+Single-drug weight functions and the Pb→BaP dose alignment.
+
+```{r fig-weights, fig.width=9, fig.height=3, out.width="100%", dpi=250}
+plot_weight_functions(save = FALSE)
+```
+
+Joint weight surfaces: the three additive nulls and the radial fit.
+
+```{r fig-surfaces, fig.width=8.5, fig.height=8, out.width="90%", dpi=150, cache=TRUE}
+plot_weight_surfaces(save = FALSE)
+```
+
+Log-likelihood across data subsets and models.
+
+```{r fig-loglik, fig.width=7.5, fig.height=3.5, out.width="70%", dpi=250}
+plot_loglik(save = FALSE)
+```
+
+Fitted vs. empirical CDFs, all data and joint exposures only.
+
+```{r fig-cdf, fig.width=9, fig.height=5, out.width="80%", dpi=250}
+plot_cdf_scatter(save = FALSE)
+```
+
+# Bootstrap Test for Additivity
+
+The additivity tests are calibrated by a parametric conditional bootstrap:
+for each null model, replicate datasets of the joint exposures data are drawn
+from the corresponding additive baseline, the radial surface is refitted on 
+each, and the likelihood-ratio statistic is recomputed to build its null
+distribution -- from which p-values and power are obtained.
+
+Refitting the model on every replicate is computationally intensive:
+the analysis in the manuscript used 10,000 replicates per hypothesis and was run
+in parallel across multiple nodes on a computing cluster.
+
+For transparency and completeness, the full procedure -- replicate simulation, 
+aggregation, and computation of the test statistics, p-values, and power -- is provided in `Bootstrap_test.R`.
+
+
+
+

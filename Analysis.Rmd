@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 # Overview
 
-This document reproduces the main results for the BaP–Pb toxicant-additivity analysis 
+This document reproduces the main results for the BaP–Pb toxicant additivity analysis 
 from the manuscript [Anceschi, Huayta, Meyer, Dunson and Herring, (2026+)
 "*Testing Additivity of Lead and Benzo[a]pyrene--induced Neurotoxicity in \textit{Caenorhabditis elegans} Assays*"](https://arxiv.org/pdf/PLACEHOLDER).
 It loads the pre-processed *C. elegans* assay data, fits the single-exposure profiles and

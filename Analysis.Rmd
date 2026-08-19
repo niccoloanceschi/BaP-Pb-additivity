@@ -19,10 +19,10 @@ knitr::opts_chunk$set(
 
 # Overview
 
-This document reproduces the main results for the BaP–Pb drug additivity analysis 
+This document reproduces the main results for the BaP–Pb toxicant-additivity analysis 
 from the manuscript [Anceschi, Huayta, Meyer, Dunson and Herring, (2026+)
 "*Testing Additivity of Lead and Benzo[a]pyrene--induced Neurotoxicity in \textit{Caenorhabditis elegans} Assays*"](https://arxiv.org/pdf/PLACEHOLDER).
-It loads the pre-processed *C. elegans* assay data, fits the single-drug margins and
+It loads the pre-processed *C. elegans* assay data, fits the single-exposure profiles and
 the joint radial-spline surface, and producess figures for the dose-response surfaces
 and log-likelihood comparisons reported in the paper. 
 Each section below sources one script from the pipeline, in dependency order.
@@ -35,7 +35,7 @@ a monotone non-decreasing function that governs the whole outcome distribution.
 Under joint exposure, it becomes a surface $\lambda_{12}(d_1,d_2)$ over the dose plane.
 Additivity is tested by a likelihood ratio comparing the fitted joint model
 against different nulls -- Bliss, Loewe$^+$, and Hand -- 
-each inducing an additive baseline surface $\lambda_{12}^{(o)}$ built from the single-drug fits.
+each inducing an additive baseline surface $\lambda_{12}^{(o)}$ built from the single-exposure fits.
 
 # Configuration
 
@@ -106,7 +106,7 @@ the across-subset log-likelihood comparison.
 source(file.path(source_dir, "Plots.R"))
 ```
 
-Single-drug weight functions and the Pb→BaP dose alignment.
+Single-exposure weight functions and the Pb→BaP dose alignment.
 
 ```{r fig-weights, fig.width=9, fig.height=3, out.width="100%", dpi=250}
 plot_weight_functions(save = FALSE)

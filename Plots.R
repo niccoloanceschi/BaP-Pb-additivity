@@ -6,7 +6,7 @@
 # signature: show prints to the active device, save writes a PDF to `dir`, and
 # the plot object is returned invisibly. Sourcing this file only DEFINES the
 # functions; nothing is drawn until they are called.
-#   plot_weight_functions  single-drug weights lambda_1, lambda_2 and the
+#   plot_weight_functions  single-exposure weights lambda_1, lambda_2 and the
 #                          Pb->BaP dose alignment (base R, 1x3).
 #   plot_weight_surfaces   joint weight surfaces (2x2): the three additive nulls
 #                          (Loewe+, Hand, Bliss) and the radial fit.

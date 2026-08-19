@@ -2,21 +2,21 @@
 # ============================================================================ #
 # Additive null models — lambda_12^(o)(d1, d2)
 # ============================================================================ #
-# The three baselines for drug additive activion, against which synergy and 
-# antagonism are tested. Each combines # the single-drug weights l1, l2 under 
+# The three baselines for additive activion, against which synergy and antagonism
+# are tested. Each combines # the single-exposure weights l1, l2 under 
 # a different notion of additivity:
 #   Bliss  — independent action (survival factorizes).
 #   Loewe+ — dose equivalence via the Explicit Mean Equation (EME).
 #   Hand   — additive instantaneous effect rates along each ray.
 # Derivations are in the paper (Hand: Appendix C); the code here just evaluates
-# them given the fitted margins. All read the global model state.
+# the joint surface given the fitted individual curves. All read the global model state.
 # ============================================================================ #
 # Consumes MODEL STATE from two files:
 #   from Data_setup.R (fixed scaffolding):
 #     dInf_BaP, dInf_Pb       maximum doses (D1^max, D2^max)
 #     deriv_Pb                Pb I-spline derivative basis (Hand only)
-#   from Run_fit.R (fitted margins):
-#     l1, l2, g, g_inv        single-drug weight functions and inverses
+#   from Run_fit.R (fitted single-exposures):
+#     l1, l2, g, g_inv        single-exposure weight functions and inverses
 #     fit_tau2                Pb potency-compression scalar
 #     fit_w_Pb                Pb spline weights (Hand only)
 # Source Utils.R and Data_setup.R before this file; the models additionally
@@ -44,11 +44,11 @@ l_bliss <- function(d1, d2){
 #
 # EME null (Lederer et al. 2018):
 #   l_mean(d1,d2) = 1/2 [ l1{ d1 + l1^{-1}(l2(d2)) } + l2{ d2 + l2^{-1}(l1(d1)) } ]
-# Each term augments one drug by the equal-effect dose of the other, using the
+# Each term augments one chemical by the equal-effect dose of the other, using the
 # dose alignment to evaluate the inverses in closed form:
 #   l1^{-1}(l2(d2)) = dInf_BaP * tau2 * g(d2)
 #   l2^{-1}(l1(d1)) = g^{-1}( d1 / (dInf_BaP * tau2) )
-# Augmented doses are clamped to each drug's range. Returns NA when d1 exceeds
+# Augmented doses are clamped to each chemical's range. Returns NA when d1 exceeds
 # the aligned BaP maximum (dInf_BaP*tau2), where the Pb-equivalent of l1(d1) is
 # undefined.
 # SCALAR ONLY: the range guards use scalar if(); call one (d1, d2) pair at a time
@@ -118,8 +118,8 @@ hand_tables <- function(nu_u, n_grid = 200L, eta_thr = 1e-10) {
 
 ## l_hand ----------------------------------------------------------------------
 ##
-## Evaluate the Hand null lambda_12 at dose pairs (d1, d2). Pure-drug rays reduce
-## to the marginals l1 / l2; mixed rays are handled by building the eta<->rho
+## Evaluate the Hand null lambda_12 at dose pairs (d1, d2). Single-chemical rays reduce
+## to the individual curves l1 / l2; mixed rays are handled by building the eta<->rho
 ## tables once per unique nu (via hand_tables) and linearly interpolating eta at
 ## the queried total dose rho = d1 + d2. Points beyond rho_max(nu) return NA
 ## (Hand undefined there — NOT clamped to 1).
@@ -129,7 +129,7 @@ hand_tables <- function(nu_u, n_grid = 200L, eta_thr = 1e-10) {
 ##   d1, d2  : BaP and Pb doses (scalar or equal-length vectors).
 ##   n_grid  : integration resolution, forwarded to hand_tables.
 ##   eta_thr : ray-purity tolerance (nu within eta_thr of 0 or 1 is treated as a
-##             marginal) and integration lower bound.
+##             single-exposure) and integration lower bound.
 ## Returns:
 ##   Weight lambda_12 in [0,1] (NA beyond the Hand domain), same length as inputs.
 ##
@@ -142,8 +142,8 @@ l_hand <- function(d1, d2, n_grid = 200L, eta_thr = 1e-10) {
   nu  <- ifelse(rho > 0, d1 / rho, 1)
   out <- numeric(length(rho))
 
-  isB <- nu >= 1 - eta_thr                    # pure BaP -> marginal (defined up to 1)
-  isP <- nu <= eta_thr                        # pure Pb  -> marginal (up to eta2_max)
+  isB <- nu >= 1 - eta_thr                    # pure BaP profile (defined up to 1)
+  isP <- nu <= eta_thr                        # pure Pb  profile (up to eta2_max)
 
   if (any(isB)) out[isB] <- l1(pmin(d1[isB], dInf_BaP))
   if (any(isP)) out[isP] <- l2(pmin(d2[isP], dInf_Pb))

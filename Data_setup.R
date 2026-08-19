@@ -3,14 +3,14 @@
 # ============================================================================ #
 # Loads the preprocessed assay data and builds the fixed scaffolding the fit
 # runs on, none of it parameter-dependent:
-#   - single-drug I-spline bases (basis_BaP, basis_Pb, deriv_Pb) and their sizes
+#   - single-exposure I-spline bases (basis_BaP, basis_Pb, deriv_Pb) and their sizes
 #   - radial bases for the joint surface: I-spline in rho (base_Phi, deriv_Phi)
 #     and B-spline in the mixing proportion nu (base_Delta, deriv_Delta)
 #   - dose constants (dInf_BaP, dInf_Pb, d1_MAX, d2_MAX, R_MAX) and spline
 #     dimensions (K_phi, K_delta)
 #   - extremal-profile PMFs (D0, Dinf)
 #   - nested joint-exposure data subsets (tri / no0 / core)
-# Built once and reused unchanged; the fitted margins and the basis caches that
+# Built once and reused unchanged; the fitted profiles and the basis caches that
 # depend on them are created later in Run_fit.R.
 # ============================================================================ #
 # Requires: source_dir, data_file (set in Analysis.Rmd); Utils.R sourced.
@@ -42,7 +42,7 @@ Dinf <- Finf - c(0, Finf[-length(Finf)])   # ny
 dInf_BaP <- ceiling(max(xBaP))
 dInf_Pb  <- ceiling(max(xPb))
 
-# Monotone I-spline bases for the single-drug weights lambda_1, lambda_2.
+# Monotone I-spline bases for the single-exposure weights lambda_1, lambda_2.
 # degree 3, interior knots hand-placed in each dose range, intercept = FALSE so
 # the basis (and thus the weight) starts at 0; softmax weights then give a
 # monotone non-decreasing curve on [0, 1]. deriv_Pb is the same basis' first
@@ -51,7 +51,7 @@ basis_BaP <- function(x) iSpline(x, degree = 3, knots = c(1, 2),  Boundary.knots
 basis_Pb  <- function(x) iSpline(x, degree = 3, knots = c(5, 10), Boundary.knots = c(0, dInf_Pb),  intercept = FALSE)
 deriv_Pb  <- function(x) iSpline(x, degree = 3, knots = c(5, 10), Boundary.knots = c(0, dInf_Pb),  intercept = FALSE, derivs = 1)
 
-# number of basis functions per margin (free spline weights = nI - 1 after softmax)
+# number of basis functions per chemical (free spline weights = nI - 1 after softmax)
 nI_BaP <- ncol(basis_BaP(0))
 nI_Pb  <- ncol(basis_Pb(0))
 

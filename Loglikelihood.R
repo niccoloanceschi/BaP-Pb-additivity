@@ -5,7 +5,7 @@
 # spline machinery they rely on. Each ordinal score distribution is a convex
 # mixture (1 - lambda) F0 + lambda Finf between the unexposed and maximal-effect
 # profiles, so fitting reduces to estimating the weight lambda(.):
-#   loglik          single-exposure margins — lambda_1(d1), lambda_2(d2), tau2
+#   loglik          single-exposure curve — lambda_1(d1), lambda_2(d2), tau2
 #                   estimated jointly; self-contained (everything is an argument).
 #   loglik_joint_fixed  joint-exposure likelihood for a FIXED weight surface — scores
 #                       the additive nulls so they compare to the radial fit.
@@ -16,14 +16,14 @@
 # derivative penalty so each optimizer step stays cheap. Formulation is in the
 # paper (Section 3); the joint helpers read the global model state.
 # ============================================================================ #
-# loglik() (single-exposure margins) is self-contained: everything is an argument.
+# loglik() (single-exposure curve) is self-contained: everything is an argument.
 # The joint-exposure helpers below consume MODEL STATE from two files:
 #   from Data_setup.R (fixed scaffolding):
 #     dInf_BaP, d1_MAX, d2_MAX                    dose ranges and region bounds
 #     base_Delta, base_Phi, deriv_Delta, deriv_Phi  radial spline bases
 #     basis_BaP, R_MAX                            reference (BaP) basis / scale
 #     K_phi, K_delta                              spline dimensions
-#   from Run_fit.R (fitted margins):
+#   from Run_fit.R (fitted single-exposures):
 #     g, g_inv, fit_tau2                          dose alignment and its inverse
 #     fit_w_BaP                                   reference (BaP) weight vector
 # Source Utils.R and Data_setup.R before this file; the joint helpers additionally
@@ -32,16 +32,16 @@
 
 # Single-exposure log-likelihood (simultaneous fit) ----------------------------
 #
-# Negative log-likelihood for the two single-drug weight functions, fit jointly.
-# Both margins share the extremal profiles F0/Finf and the Pb->BaP dose
+# Negative log-likelihood for the two single-exposure weight functions, fit jointly.
+# Both single-exposure data share the extremal profiles F0/Finf and the Pb->BaP dose
 # alignment g(.), so BaP weights, Pb weights, and the Pb potency scalar tau2 are
 # estimated in one optimization. Minimizes over `params` (via subplex).
 #
 # Args:
 #   params  : initial values for free parameters, length (nI1-1) + (nI2-1) + 1, 
 #             laid out as [ BaP spline logits | Pb spline logits | logit(tau2) ]. 
-#             The final spline weight of each margin is fixed to 0
-#             (softmax reference), hence nI-1 free logits per margin.
+#             The final spline weight of each set is fixed to 0
+#             (softmax reference), hence nI-1 free logits per chemical
 #   y1, y2  : count matrices (ny x nx), columns = doses in x1/x2, rows = scores.
 #   x1, x2  : unique dose values for BaP / Pb (including 0 and the max dose).
 #   nI1,nI2 : number of I-spline basis functions for BaP / Pb.
@@ -51,7 +51,7 @@
 #   eps     : floor on probabilities before the log, for numerical stability.
 #
 # Returns:
-#   Scalar negative log-likelihood (sum over both drugs)
+#   Scalar negative log-likelihood (sum over both chemicals)
 #
 # Details:
 #   w1/w2 are softmax-normalized spline weights; tau2 = invlogit(last param).

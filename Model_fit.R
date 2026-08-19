@@ -1,9 +1,9 @@
 # ============================================================================ #
-# Model_fit.R — margins fit, weight functions, and joint radial-spline fit
+# Model_fit.R — single-exposure curve fit, weight functions, and joint radial-spline fit
 # ============================================================================ #
 # Fits the two stages of the model on the scaffolding built in Data_setup.R,
 # and leaves behind the FITTED model state. Run top to bottom, it proceeds as:
-#   1. fit the single-drug margins simultaneously (loglik) — recovering the BaP
+#   1. fit the single-exposure curves simultaneously (loglik) — recovering the BaP
 #      and Pb spline weights and the potency scalar tau2.
 #   2. define the fitted weight functions l1, g, l2 and their inverses.
 #   3. build the parameter-independent caches (measurement + penalty grid) that
@@ -44,9 +44,9 @@ fit_tau2  <- invlogit(fit_margins$par[nI_BaP + nI_Pb - 1])
 
 # Weight functions and inverses ------------------------------------------------
 
-# The fitted margins as closures over the spline weights. l1 is the reference
+# The fitted profiles as closures over the spline weights. l1 is the reference
 # (BaP) weight; g maps a Pb dose to a [0,1] fraction of its aligned range; l2
-# reuses l1 on the aligned Pb dose, so both drugs share one dose-response shape.
+# reuses l1 on the aligned Pb dose, so both chemicals relate to one dose-response shape.
 l1 <- function(d1) as.vector(basis_BaP(d1) %*% fit_w_BaP)   # lambda_1(d1) in [0,1]
 g  <- function(d2) as.vector(basis_Pb(d2)  %*% fit_w_Pb)    # g(d2) in [0,1]
 l2 <- function(d2) l1(dInf_BaP * fit_tau2 * g(d2))          # lambda_2(d2) = lambda_1(D1^max * tau2 * g(d2))
